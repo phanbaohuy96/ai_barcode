@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.air.ai_barcode.custom_zxing_scanner.CustomZXingScanner
 import com.google.zxing.Result
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
@@ -59,7 +60,7 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
     /**
      * 二维码扫描组件
      */
-    var zxing: ZXingScannerView = ZXingScannerView(context);
+    var zxing: CustomZXingScanner = CustomZXingScanner(context);
     var linear: LinearLayout = LinearLayout(context);
     var textView: TextView = TextView(context);
 
