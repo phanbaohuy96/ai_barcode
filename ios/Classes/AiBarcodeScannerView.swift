@@ -6,16 +6,18 @@
 //
 
 import Foundation
+import AVFoundation
 import Flutter
 import MTBBarcodeScanner
 
 
-class AiBarcodeScannerView:NSObject,FlutterPlatformView{
+class AiBarcodeScannerView:NSObject, FlutterPlatformView, FlutterStreamHandler {
     
     var scannerView: UIView!
     var scanner:MTBBarcodeScanner!
     var methodChannel:FlutterMethodChannel?;
-    var flutterResult:FlutterResult?;
+    var eventChannel:FlutterEventChannel?;
+    var flutterEventSink:FlutterEventSink?
     var binaryMessenger:FlutterBinaryMessenger!;
     /*
      Constructor.
@@ -42,6 +44,16 @@ class AiBarcodeScannerView:NSObject,FlutterPlatformView{
         
         return scannerView;
     }
+
+    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+        flutterEventSink = events
+        return nil
+    }
+    
+    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        flutterEventSink = nil
+        return nil
+    } 
     
     func initMethodChannel(){
         /*
@@ -49,10 +61,6 @@ class AiBarcodeScannerView:NSObject,FlutterPlatformView{
          */
         methodChannel = FlutterMethodChannel.init(name: "view_type_id_scanner_view_method_channel", binaryMessenger: binaryMessenger)
         methodChannel?.setMethodCallHandler { (call :FlutterMethodCall, result:@escaping FlutterResult)  in
-            /*
-             Save flutter result.
-             */
-            self.flutterResult = result;
             
             switch(call.method){
             case "startCamera":
@@ -98,9 +106,12 @@ class AiBarcodeScannerView:NSObject,FlutterPlatformView{
                 self.toggleFlash();
                 break;
             default:
-                self.flutterResult?("method:\(call.method) not implement");
+                result("method:\(call.method) not implement");
             }
+            result("succees");
         }
+        eventChannel = FlutterEventChannel(name: "view_type_id_scanner_view_event_channel", binaryMessenger: binaryMessenger, codec: FlutterJSONMethodCodec.sharedInstance())  
+        eventChannel?.setStreamHandler(self)
     }
     
     
@@ -115,35 +126,27 @@ class AiBarcodeScannerView:NSObject,FlutterPlatformView{
         if(self.scanner.isScanning()){
             return;
         }
-        MTBBarcodeScanner.requestCameraPermission(success: { success in
-            if success {
-                do {
-                    try self.scanner.startScanning(resultBlock: { codes in
-                        if let codes = codes {
-                            for code in codes {
-                                let stringValue = code.stringValue!
-                                if(self.flutterResult != nil){
-                                    self.flutterResult?("\(stringValue)");
-                                }
-                                
-                                print("Found code: \(stringValue)")
-                            }
+        do {
+            try self.scanner.startScanning(resultBlock: { codes in
+                if let codes = codes {
+                    for code in codes {
+                        let stringValue = code.stringValue!
+                        if (self.flutterEventSink != nil){
+                            self.flutterEventSink?(["name":"onCodeFound", "code": stringValue])
                         }
-                    })
-                } catch {
-                    NSLog("Unable to start scanning error:\(error)")
-                    self.flutterResult?("Unable to start scanning error:\(error)");
+                        
+                        print("Found code: \(stringValue)")
+                    }
                 }
-            } else {
-                self.flutterResult?("Unable to start scanning This app does not have permission to access the camera");
-            }
-        })
+            })
+        } catch {
+            NSLog("Unable to start scanning error:\(error)")
+        }
     }
     
     func stopCameraPreview(){
         if(self.scanner.isScanning()){
             self.scanner.stopScanning()
-            
         }
         
     }

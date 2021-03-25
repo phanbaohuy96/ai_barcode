@@ -16,7 +16,7 @@ class AiBarcodeMobileScannerPlugin extends AiBarcodeScannerPlatform {
   ///
   /// Support android and ios platform barcode reader
   Widget _cameraView(BuildContext context) {
-    TargetPlatform targetPlatform = Theme.of(context).platform;
+    final targetPlatform = Theme.of(context).platform;
 
     if (targetPlatform == TargetPlatform.android) {
       return AndroidView(
@@ -24,8 +24,8 @@ class AiBarcodeMobileScannerPlugin extends AiBarcodeScannerPlatform {
         onPlatformViewCreated: (int id) {
           onPlatformScannerViewCreated(id);
         },
-        creationParams: <String, dynamic>{},
-        creationParamsCodec: StandardMessageCodec(),
+        creationParams: const <String, dynamic>{},
+        creationParamsCodec: const StandardMessageCodec(),
       );
     } else if (targetPlatform == TargetPlatform.iOS) {
       return UiKitView(
@@ -33,54 +33,15 @@ class AiBarcodeMobileScannerPlugin extends AiBarcodeScannerPlatform {
         onPlatformViewCreated: (int id) {
           onPlatformScannerViewCreated(id);
         },
-        creationParams: <String, dynamic>{},
-        creationParamsCodec: StandardMessageCodec(),
+        creationParams: const <String, dynamic>{},
+        creationParamsCodec: const StandardMessageCodec(),
       );
     } else {
       return Center(
         child: Text(
-          "$unsupportedPlatformDescription",
+          '$unsupportedPlatformDescription',
         ),
       );
     }
   }
-
-//  Widget _barcodeCreator({BuildContext context}) {
-//    TargetPlatform targetPlatform = Theme.of(context).platform;
-//    if (targetPlatform == TargetPlatform.android) {
-//      return AndroidView(
-//        viewType: AiBarcodeScannerPlatform.viewIdOfCreator,
-//        creationParams: <String, dynamic>{
-//          "qrCodeContent":
-//              AiBarcodeScannerPlatform.instance.initialValueOfCreator,
-//        },
-//        creationParamsCodec: StandardMessageCodec(),
-//        onPlatformViewCreated: (int id) {
-//          //created callback
-//          onPlatformCreatorViewCreated(id);
-//          //initial value
-//          AiBarcodeScannerPlatform.instance.updateQRCodeValue(
-//              AiBarcodeScannerPlatform.instance.initialValueOfCreator);
-//        },
-//      );
-//    } else if (targetPlatform == TargetPlatform.iOS) {
-//      return UiKitView(
-//        viewType: AiBarcodeScannerPlatform.viewIdOfCreator,
-//        creationParams: <String, dynamic>{
-//          "qrCodeContent":
-//              AiBarcodeScannerPlatform.instance.initialValueOfCreator,
-//        },
-//        creationParamsCodec: StandardMessageCodec(),
-//        onPlatformViewCreated: (int id) {
-//          //created callback
-//          onPlatformCreatorViewCreated(id);
-//          //initial value
-//          AiBarcodeScannerPlatform.instance.updateQRCodeValue(
-//              AiBarcodeScannerPlatform.instance.initialValueOfCreator);
-//        },
-//      );
-//    } else {
-//      return Text("Unsupported platform!");
-//    }
-//  }
 }

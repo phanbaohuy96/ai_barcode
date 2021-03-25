@@ -8,21 +8,18 @@ part of '../ai_barcode.dart';
 class PlatformAiBarcodeScannerWidget extends StatefulWidget {
   ///
   /// Controller.
-  ScannerController _platformScannerController;
+  final ScannerController platformScannerController;
 
-  ///
-  /// UnsupportedDescription
-  String _unsupportedDescription;
+  final Function(String) onScanResult;
+  final Function() onViewCreated;
 
   ///
   /// Constructor.
-  PlatformAiBarcodeScannerWidget({
-    @required ScannerController platformScannerController,
-    String unsupportedDescription,
-  }) {
-    _platformScannerController = platformScannerController;
-    _unsupportedDescription = unsupportedDescription;
-  }
+  const PlatformAiBarcodeScannerWidget({
+    @required this.platformScannerController,
+    this.onScanResult,
+    this.onViewCreated,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -39,27 +36,43 @@ class _PlatformScannerWidgetState
   @override
   void initState() {
     super.initState();
+
+    final instance = AiBarcodeScannerPlatform.instance;
     //Create
-    AiBarcodeScannerPlatform.instance.addListener(_widgetCreatedListener);
-    AiBarcodeScannerPlatform.instance.unsupportedPlatformDescription =
-        widget._unsupportedDescription;
+    widget.platformScannerController.aiBarcodeScannerPlatform = instance;
+
+    instance
+      ..scannerResult = widget.onScanResult
+      ..scannerViewCreated = widget.onViewCreated;
   }
 
-  ///
-  /// CreatedListener.
-  _widgetCreatedListener() {
-    if (widget._platformScannerController != null) {
-      if (widget._platformScannerController._scannerViewCreated != null) {
-        widget._platformScannerController._scannerViewCreated();
-      }
-    }
+  @override
+  void didChangeDependencies() {
+    final instance = AiBarcodeScannerPlatform.instance;
+    //Create
+    widget.platformScannerController.aiBarcodeScannerPlatform = instance;
+
+    instance
+      ..scannerResult = widget.onScanResult
+      ..scannerViewCreated = widget.onViewCreated;
+    super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant PlatformAiBarcodeScannerWidget oldWidget) {
+    final instance = AiBarcodeScannerPlatform.instance;
+    //Create
+    widget.platformScannerController.aiBarcodeScannerPlatform = instance;
+
+    instance
+      ..scannerResult = widget.onScanResult
+      ..scannerViewCreated = widget.onViewCreated;
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
   void dispose() {
     super.dispose();
-    //Release
-    AiBarcodeScannerPlatform.instance.removeListener(_widgetCreatedListener);
   }
 
   @override
@@ -71,146 +84,54 @@ class _PlatformScannerWidgetState
 ///
 /// PlatformScannerController
 class ScannerController {
-  ///
-  /// Result
-  Function(String result) _scannerResult;
-  Function() _scannerViewCreated;
+  AiBarcodeScannerPlatform aiBarcodeScannerPlatform;
 
-  ///
-  /// Constructor.
-  ScannerController({
-    @required scannerResult(String result),
-    scannerViewCreated(),
-  }) {
-    _scannerResult = scannerResult;
-    _scannerViewCreated = scannerViewCreated;
-  }
-
-  Function() get scannerViewCreated => _scannerViewCreated;
-
-  bool get isStartCamera => AiBarcodeScannerPlatform.instance.isStartCamera;
+  bool get isStartCamera => aiBarcodeScannerPlatform.isStartCamera;
   bool get isStartCameraPreview =>
-      AiBarcodeScannerPlatform.instance.isStartCameraPreview;
+      aiBarcodeScannerPlatform.isStartCameraPreview;
 
-  bool get isOpenFlash => AiBarcodeScannerPlatform.instance.isOpenFlash;
+  bool get isOpenFlash => aiBarcodeScannerPlatform.isOpenFlash;
 
   ///
   /// Start camera without open QRCode、BarCode scanner,this is just open camera.
-  startCamera() {
-    AiBarcodeScannerPlatform.instance.startCamera();
+  Future startCamera() {
+    return aiBarcodeScannerPlatform.startCamera();
   }
 
   ///
   /// Stop camera.
-  stopCamera() async {
-    AiBarcodeScannerPlatform.instance.stopCamera();
+  Future stopCamera() {
+    return aiBarcodeScannerPlatform.stopCamera();
   }
 
   ///
-  /// Start camera preview with open QRCode、BarCode scanner,this is open code scanner.
-  startCameraPreview() async {
-    String code = await AiBarcodeScannerPlatform.instance.startCameraPreview();
-    _scannerResult(code);
+  /// Start camera preview with open QRCode、BarCode scanner,
+  /// this is open code scanner.
+  Future startCameraPreview() {
+    return aiBarcodeScannerPlatform.startCameraPreview();
   }
 
   ///
   /// Stop camera preview.
-  stopCameraPreview() async {
-    AiBarcodeScannerPlatform.instance.stopCameraPreview();
+  Future stopCameraPreview() {
+    return aiBarcodeScannerPlatform.stopCameraPreview();
   }
 
   ///
   /// Open camera flash.
-  openFlash() async {
-    AiBarcodeScannerPlatform.instance.openFlash();
+  Future openFlash() {
+    return aiBarcodeScannerPlatform.openFlash();
   }
 
   ///
   /// Close camera flash.
-  closeFlash() async {
-    AiBarcodeScannerPlatform.instance.closeFlash();
+  Future closeFlash() {
+    return aiBarcodeScannerPlatform.closeFlash();
   }
 
   ///
   /// Toggle camera flash.
-  toggleFlash() async {
-    AiBarcodeScannerPlatform.instance.toggleFlash();
-  }
-}
-
-///
-/// PlatformAiBarcodeCreatorWidget
-///
-/// Supported android and ios write barcode
-// ignore: must_be_immutable
-class PlatformAiBarcodeCreatorWidget extends StatefulWidget {
-  CreatorController _creatorController;
-  String _initialValue;
-  String _unsupportedDescription;
-  PlatformAiBarcodeCreatorWidget({
-    @required CreatorController creatorController,
-    @required String initialValue,
-    String unsupportedDescription,
-  }) {
-    _creatorController = creatorController;
-    _initialValue = initialValue;
-    _unsupportedDescription = unsupportedDescription;
-  }
-  @override
-  State<StatefulWidget> createState() {
-    return _PlatformAiBarcodeCreatorState();
-  }
-}
-
-///
-/// _PlatformAiBarcodeCreatorState
-class _PlatformAiBarcodeCreatorState
-    extends State<PlatformAiBarcodeCreatorWidget> {
-  @override
-  void initState() {
-    super.initState();
-    //create
-    AiBarcodeCreatorPlatform.instance.unsupportedPlatformDescription =
-        widget._unsupportedDescription;
-    AiBarcodeCreatorPlatform.instance.initialValueOfCreator =
-        widget._initialValue;
-    AiBarcodeCreatorPlatform.instance.addListener(_creatorCreatedCallback);
-  }
-
-  _creatorCreatedCallback() {
-    if (widget._creatorController != null &&
-        widget._creatorController._creatorViewCreated != null) {
-      widget._creatorController._creatorViewCreated();
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    //release
-    AiBarcodeCreatorPlatform.instance.removeListener(_creatorCreatedCallback);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AiBarcodeCreatorPlatform.instance.buildCreatorView(context);
-  }
-}
-
-///
-/// CreatorController
-class CreatorController {
-  Function() _creatorViewCreated;
-
-  CreatorController({
-    Function() creatorViewCreated,
-  }) {
-    _creatorViewCreated = creatorViewCreated;
-  }
-
-  void updateValue({
-    @required String value,
-  }) {
-    AiBarcodeCreatorPlatform.instance.updateQRCodeValue(value);
+  Future toggleFlash() {
+    return aiBarcodeScannerPlatform.toggleFlash();
   }
 }

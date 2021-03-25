@@ -1,6 +1,9 @@
-import 'package:ai_barcode/src/ai_barcode_platform_interface.dart';
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../ai_barcode_platform_interface.dart';
 import 'ai_barcode_mobile_scanner_plugin.dart';
 
 /// AiBarcodeScannerPlatform
@@ -8,8 +11,9 @@ abstract class AiBarcodeScannerPlatform extends ChangeNotifier
     with AiBarcodePlatform {
   /// Only mock implementations should set this to true.
   ///
-  /// Mockito mocks are implementing this class with `implements` which is forbidden for anything
-  /// other than mocks (see class docs). This property provides a backdoor for mockito mocks to
+  /// Mockito mocks are implementing this class with `implements` which is
+  /// forbidden for anything other than mocks (see class docs).
+  /// This property provides a backdoor for mockito mocks to
   /// skip the verification that the class isn't implemented with `implements`.
   @visibleForTesting
   bool get isMock => false;
@@ -41,7 +45,7 @@ abstract class AiBarcodeScannerPlatform extends ChangeNotifier
   bool get isOpenFlash => _isOpenFlash;
 
   String _unsupportedPlatformDescription =
-      "Unsupported platforms, working hard to support";
+      'Unsupported platforms, working hard to support';
 
   String get unsupportedPlatformDescription => _unsupportedPlatformDescription;
 
@@ -73,66 +77,97 @@ abstract class AiBarcodeScannerPlatform extends ChangeNotifier
 
   ///
   /// View created of scanner widget
-  onPlatformScannerViewCreated(int id) {
-    notifyListeners();
+  void onPlatformScannerViewCreated(int id) {
+    scannerViewCreated?.call();
   }
 
   ///
   /// Start camera without open QRCode、BarCode scanner,this is just open camera.
-  startCamera() async {
+  Future<void> startCamera() async {
     _isStartCamera = true;
-    AiBarcodePlatform.methodChannelScanner.invokeMethod("startCamera");
+    await AiBarcodePlatform.methodChannelScanner.invokeMethod('startCamera');
+    listenEventChannel();
   }
 
   ///
   /// Stop camera.
-  stopCamera() async {
+  Future stopCamera() async {
     _isStartCamera = false;
-    AiBarcodePlatform.methodChannelScanner.invokeMethod("stopCamera");
+    return AiBarcodePlatform.methodChannelScanner.invokeMethod('stopCamera');
   }
 
   ///
-  /// Start camera preview with open QRCode、BarCode scanner,this is open code scanner.
-  Future<String> startCameraPreview() async {
+  /// Start camera preview with open QRCode、BarCode scanner,
+  /// this is open code scanner.
+  Future<String> startCameraPreview() {
     _isStartCameraPreview = true;
-    return await AiBarcodePlatform.methodChannelScanner
-        .invokeMethod("resumeCameraPreview");
+    return AiBarcodePlatform.methodChannelScanner.invokeMethod(
+      'resumeCameraPreview',
+    );
   }
 
   ///
   /// Stop camera preview.
-  stopCameraPreview() async {
+  Future stopCameraPreview() {
     _isStartCameraPreview = false;
-    AiBarcodePlatform.methodChannelScanner.invokeMethod("stopCameraPreview");
+    return AiBarcodePlatform.methodChannelScanner
+        .invokeMethod('stopCameraPreview');
   }
 
   ///
   /// Open camera flash.
-  openFlash() async {
+  Future openFlash() {
     _isOpenFlash = true;
-    AiBarcodePlatform.methodChannelScanner.invokeMethod("openFlash");
+    return AiBarcodePlatform.methodChannelScanner.invokeMethod('openFlash');
   }
 
   ///
   /// Close camera flash.
-  closeFlash() async {
+  Future closeFlash() {
     _isOpenFlash = false;
-    AiBarcodePlatform.methodChannelScanner.invokeMethod("closeFlash");
+    return AiBarcodePlatform.methodChannelScanner.invokeMethod('closeFlash');
   }
 
   ///
   /// Toggle camera flash.
-  toggleFlash() async {
-    bool flash = isOpenFlash;
+  Future toggleFlash() {
+    final flash = isOpenFlash;
     _isOpenFlash = !flash;
-    AiBarcodePlatform.methodChannelScanner.invokeMethod("toggleFlash");
+    return AiBarcodePlatform.methodChannelScanner.invokeMethod('toggleFlash');
   }
 
   // This method makes sure that AiBarcode isn't implemented with `implements`.
   //
   // See class doc for more details on why implementing this class is forbidden.
   //
-  // This private method is called by the instance setter, which fails if the class is
-  // implemented with `implements`.
+  // This private method is called by the instance setter,
+  // which fails if the class is implemented with `implements`.
   void _verifyProvidesDefaultImplementations() {}
+
+  void listenEventChannel() {
+    const EventChannel(
+      'view_type_id_scanner_view_event_channel',
+      JSONMethodCodec(),
+    ).receiveBroadcastStream().listen(_receiveBroadcastStream);
+  }
+
+  StreamSubscription<dynamic> _receiveBroadcastStream(dynamic event) {
+    final eventName = event['name'];
+    switch (eventName) {
+
+      /* onCodeFound */
+      case 'onCodeFound':
+        scannerResult?.call(event['code'].toString());
+        break;
+
+      default:
+        break;
+    }
+    return null;
+  }
+
+  ///
+  /// Result
+  Function(String result) scannerResult;
+  Function() scannerViewCreated;
 }
