@@ -120,6 +120,7 @@ class AiBarcodeScannerView:NSObject, FlutterPlatformView, FlutterStreamHandler {
         
     }
     func stopCamera(){
+        self.flutterEventSink = nil
         //        self.scanner?.stopScanning()
     }
     func resumeCameraPreview(){

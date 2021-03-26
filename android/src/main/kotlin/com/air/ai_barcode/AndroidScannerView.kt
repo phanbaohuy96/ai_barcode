@@ -45,6 +45,8 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
         message.put("name", "onCodeFound")
         message.put("code", rawResult.toString())
 
+        Log.d("AndroidScannerView", "Found code: ${rawResult.toString()}")
+
         this.eventChannelSink?.success(message)
     }
 
@@ -111,6 +113,7 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
 
     private fun stopCamera() {
         zxing.stopCamera();
+        this.eventChannelSink = null
     }
 
     private fun resumeCameraPreview() {
