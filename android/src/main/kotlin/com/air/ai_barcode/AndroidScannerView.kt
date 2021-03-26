@@ -22,7 +22,7 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
 
 
     /**
-     * 用于向Flutter发送数据
+     * EventChannel.StreamHandler
      */
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         this.eventChannelSink = events
@@ -37,7 +37,7 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
     }
 
     /**
-     * 识别二维码结果
+     * MyScannerView.ResultHandler
      */
     override fun handleResult(rawResult: Result?) {
         val message = JSONObject()
@@ -51,15 +51,15 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
     }
 
     /**
-     * 接收Flutter传递过来的数据据
+     * MethodChannel.MethodCallHandler
      */
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
 
         when (call.method) {
             "startCamera" -> startCamera()
             "stopCamera" -> stopCamera()
-            "resumeCameraPreview" -> resumeCameraPreview()
-            "stopCameraPreview" -> stopCameraPreview()
+            "resumeCamera" -> resumeCamera()
+            "pauseCamera" -> pauseCamera()
             "openFlash" -> openFlash()
             "closeFlash" -> closeFlash()
             "toggleFlash" -> toggleFlash()
@@ -69,12 +69,12 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
     }
 
     /**
-     * 二维码扫描组件
+     * Scanner
      */
     var zxing: MyScannerView = MyScannerView(context);
 
 
-    var eventChannelSink: EventChannel.EventSink? = null;
+    var eventChannelSink: EventChannel.EventSink? = null
 
     init {
         Log.d("AndroidScannerView", "init")
@@ -82,7 +82,7 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
         /*
         MethodChannel
          */
-        MethodChannel(binaryMessenger, "view_type_id_scanner_view_method_channel").setMethodCallHandler(this);
+        MethodChannel(binaryMessenger, "view_type_id_scanner_view_method_channel").setMethodCallHandler(this)
         /*
         EventChannel
          */
@@ -90,9 +90,9 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
     }
 
     override fun getView(): View {
-        zxing.setAutoFocus(true);
-        zxing.setAspectTolerance(0.5f);
-        return zxing;
+        zxing.setAutoFocus(true)
+        zxing.setAspectTolerance(0.5f)
+        return zxing
     }
 
     override fun dispose() {
@@ -108,31 +108,32 @@ class AndroidScannerView(binaryMessenger: BinaryMessenger, context: Context, vie
     }
 
     private fun startCamera() {
-        zxing.startCamera();
+        zxing.startCamera()
+        zxing.resumeCameraPreview(this)
     }
 
     private fun stopCamera() {
-        zxing.stopCamera();
+        zxing.stopCamera()
         this.eventChannelSink = null
     }
 
-    private fun resumeCameraPreview() {
-        zxing.resumeCameraPreview(this);
+    private fun resumeCamera() {
+        zxing.resumeCameraPreview(this)
     }
 
-    private fun stopCameraPreview() {
-        zxing.stopCameraPreview();
+    private fun pauseCamera() {
+        zxing.stopCameraPreview()
     }
 
     private fun openFlash() {
-        zxing.flash = true;
+        zxing.flash = true
     }
 
     private fun closeFlash() {
-        zxing.flash = false;
+        zxing.flash = false
     }
 
     private fun toggleFlash() {
-        zxing.toggleFlash();
+        zxing.toggleFlash()
     }
 }

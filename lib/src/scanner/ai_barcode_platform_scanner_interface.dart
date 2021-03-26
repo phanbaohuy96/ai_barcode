@@ -6,6 +6,9 @@ import 'package:flutter/services.dart';
 import '../ai_barcode_platform_interface.dart';
 import 'ai_barcode_mobile_scanner_plugin.dart';
 
+enum CameraState { starting, stopped, paused }
+enum FlashState { open, closed }
+
 /// AiBarcodeScannerPlatform
 abstract class AiBarcodeScannerPlatform extends ChangeNotifier
     with AiBarcodePlatform {
@@ -20,9 +23,8 @@ abstract class AiBarcodeScannerPlatform extends ChangeNotifier
 
   static AiBarcodeScannerPlatform _instance = AiBarcodeMobileScannerPlugin();
 
-  bool _isStartCamera = false;
-  bool _isStartCameraPreview = false;
-  bool _isOpenFlash = false;
+  CameraState _cameraState = CameraState.stopped;
+  FlashState _flashState = FlashState.closed;
 
   /// The default instance of [AiBarcodeScannerPlatform] to use.
   ///
@@ -34,15 +36,17 @@ abstract class AiBarcodeScannerPlatform extends ChangeNotifier
 
   ///
   /// Whether start camera
-  bool get isStartCamera => _isStartCamera;
+  bool get isStartCamera => _cameraState == CameraState.starting;
 
   ///
   /// Whether start camera preview or start to recognize
-  bool get isStartCameraPreview => _isStartCameraPreview;
+  bool get isStoppedCamera => _cameraState == CameraState.stopped;
+
+  bool get isPauseCamera => _cameraState == CameraState.paused;
 
   ///
   /// Whether open the flash
-  bool get isOpenFlash => _isOpenFlash;
+  bool get isOpenFlash => _flashState == FlashState.open;
 
   String _unsupportedPlatformDescription =
       'Unsupported platforms, working hard to support';
@@ -84,7 +88,7 @@ abstract class AiBarcodeScannerPlatform extends ChangeNotifier
   ///
   /// Start camera without open QRCode、BarCode scanner,this is just open camera.
   Future<void> startCamera() async {
-    _isStartCamera = true;
+    _cameraState = CameraState.starting;
     await AiBarcodePlatform.methodChannelScanner.invokeMethod('startCamera');
     listenEventChannel();
   }
@@ -92,47 +96,44 @@ abstract class AiBarcodeScannerPlatform extends ChangeNotifier
   ///
   /// Stop camera.
   Future stopCamera() async {
-    _isStartCamera = false;
+    _cameraState = CameraState.stopped;
     return AiBarcodePlatform.methodChannelScanner.invokeMethod('stopCamera');
   }
 
   ///
   /// Start camera preview with open QRCode、BarCode scanner,
   /// this is open code scanner.
-  Future<String> startCameraPreview() {
-    _isStartCameraPreview = true;
-    return AiBarcodePlatform.methodChannelScanner.invokeMethod(
-      'resumeCameraPreview',
-    );
+  Future<String> resumeCamera() {
+    _cameraState = CameraState.starting;
+    return AiBarcodePlatform.methodChannelScanner.invokeMethod('resumeCamera');
   }
 
   ///
   /// Stop camera preview.
-  Future stopCameraPreview() {
-    _isStartCameraPreview = false;
-    return AiBarcodePlatform.methodChannelScanner
-        .invokeMethod('stopCameraPreview');
+  Future pauseCamera() {
+    _cameraState = CameraState.paused;
+    return AiBarcodePlatform.methodChannelScanner.invokeMethod('pauseCamera');
   }
 
   ///
   /// Open camera flash.
   Future openFlash() {
-    _isOpenFlash = true;
+    _flashState = FlashState.open;
     return AiBarcodePlatform.methodChannelScanner.invokeMethod('openFlash');
   }
 
   ///
   /// Close camera flash.
   Future closeFlash() {
-    _isOpenFlash = false;
+    _flashState = FlashState.closed;
     return AiBarcodePlatform.methodChannelScanner.invokeMethod('closeFlash');
   }
 
   ///
   /// Toggle camera flash.
   Future toggleFlash() {
-    final flash = isOpenFlash;
-    _isOpenFlash = !flash;
+    _flashState =
+        _flashState == FlashState.open ? FlashState.closed : FlashState.open;
     return AiBarcodePlatform.methodChannelScanner.invokeMethod('toggleFlash');
   }
 

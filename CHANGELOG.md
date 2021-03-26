@@ -1,3 +1,10 @@
+## [1.2.0]
+
+* Reactor working flow
+* Support Resume/Pause camera
+* Support continuous scanning
+* Fix crash on ios
+
 ## [1.1.4]
 
 * improve healthy

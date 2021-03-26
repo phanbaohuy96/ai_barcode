@@ -87,8 +87,7 @@ class ScannerController {
   AiBarcodeScannerPlatform aiBarcodeScannerPlatform;
 
   bool get isStartCamera => aiBarcodeScannerPlatform.isStartCamera;
-  bool get isStartCameraPreview =>
-      aiBarcodeScannerPlatform.isStartCameraPreview;
+  bool get isPausedCamera => aiBarcodeScannerPlatform.isStoppedCamera;
 
   bool get isOpenFlash => aiBarcodeScannerPlatform.isOpenFlash;
 
@@ -105,16 +104,15 @@ class ScannerController {
   }
 
   ///
-  /// Start camera preview with open QRCode、BarCode scanner,
-  /// this is open code scanner.
-  Future startCameraPreview() {
-    return aiBarcodeScannerPlatform.startCameraPreview();
+  /// Pause camera
+  Future pauseCamera() {
+    return aiBarcodeScannerPlatform.pauseCamera();
   }
 
   ///
-  /// Stop camera preview.
-  Future stopCameraPreview() {
-    return aiBarcodeScannerPlatform.stopCameraPreview();
+  /// Resume camera
+  Future resumeCamera() {
+    return aiBarcodeScannerPlatform.resumeCamera();
   }
 
   ///

@@ -64,44 +64,23 @@ class AiBarcodeScannerView:NSObject, FlutterPlatformView, FlutterStreamHandler {
             
             switch(call.method){
             case "startCamera":
-                /*
-                 打开相机
-                 */
                 self.startCamera();
                 break;
             case "stopCamera":
-                /*
-                 关闭相机
-                 */
                 self.stopCamera();
                 break;
-                /*
-                 预览相机
-                 */
-            case "resumeCameraPreview":
-                self.resumeCameraPreview();
+            case "pauseCamera":
+                self.pauseCamera();
                 break;
-                /*
-                 停止预览
-                 */
-            case "stopCameraPreview":
-                self.stopCameraPreview();
+            case "resumeCamera":
+                self.resumeCamera();
                 break;
-                /*
-                 打开手电筒
-                 */
             case "openFlash":
                 self.openFlash();
                 break;
-                /*
-                 关闭手电筒
-                 */
             case "closeFlash":
                 self.closeFlash();
                 break;
-                /*
-                 切换手电筒
-                 */
             case "toggleFlash":
                 self.toggleFlash();
                 break;
@@ -117,13 +96,6 @@ class AiBarcodeScannerView:NSObject, FlutterPlatformView, FlutterStreamHandler {
     
     
     func startCamera(){
-        
-    }
-    func stopCamera(){
-        self.flutterEventSink = nil
-        //        self.scanner?.stopScanning()
-    }
-    func resumeCameraPreview(){
         if(self.scanner.isScanning()){
             return;
         }
@@ -131,7 +103,7 @@ class AiBarcodeScannerView:NSObject, FlutterPlatformView, FlutterStreamHandler {
             try self.scanner.startScanning(resultBlock: { codes in
                 if let codes = codes {
                     for code in codes {
-                        let stringValue = code.stringValue!
+                        guard let stringValue = code.stringValue else { continue }
                         if (self.flutterEventSink != nil){
                             self.flutterEventSink?(["name":"onCodeFound", "code": stringValue])
                         }
@@ -145,12 +117,29 @@ class AiBarcodeScannerView:NSObject, FlutterPlatformView, FlutterStreamHandler {
         }
     }
     
-    func stopCameraPreview(){
+    func stopCamera(){
+        self.flutterEventSink = nil
         if(self.scanner.isScanning()){
             self.scanner.stopScanning()
         }
-        
     }
+    
+    func pauseCamera(){
+        if let sc: MTBBarcodeScanner = self.scanner {
+            if sc.isScanning() {
+                sc.freezeCapture()
+            }
+        }
+    }
+
+    func resumeCamera() {
+        if let sc: MTBBarcodeScanner = self.scanner {
+            if !sc.isScanning() {
+                sc.unfreezeCapture()
+            }
+        }
+    }
+
     func openFlash(){
         //        scanner?.setTorchMode(MTBTorchMode.on)
     }
